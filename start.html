@@ -1,0 +1,397 @@
+
+<html style="background-color: lightgray">
+    
+  <center><h1>Welcome To Photogram</h1></center>  
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+    
+    
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="https://www.gstatic.com/firebasejs/5.7.3/firebase.js"></script>
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+<div id="mySidenav" class="sidenav">
+  <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+  <a href="newpage.html">Next Post</a>
+  <a href="start.html">Previous Post</a>
+  <a href="#">Comment</a>
+    
+    <style>
+        body {
+            color: black;
+            font-size: 40px;
+        }
+    </style>
+    
+</div>
+
+<!-- Use any element to open the sidenav -->
+<span onclick="openNav()">Sidebar</span>
+
+<!-- Add all page content inside this div if you want the side nav to push page content to the right (not used if you only want the sidenav to sit on top of the page -->
+<div id="main">
+  ...
+</div>
+    <style>
+     .sidenav {
+  height: 100%; /* 100% Full-height */
+  width: 0; /* 0 width - change this with JavaScript */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Stay on top */
+  top: 0; /* Stay at the top */
+  left: 0;
+  background-color: white; /* Black*/
+  overflow-x: hidden; /* Disable horizontal scroll */
+  padding-top: 60px; /* Place content 60px from the top */
+  transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
+}
+
+/* The navigation menu links */
+.sidenav a {
+  padding: 8px 8px 8px 32px;
+  text-decoration: none;
+  font-size: 25px;
+  color: black;
+  display: block;
+  transition: 0.3s;
+}
+
+/* When you mouse over the navigation links, change their color */
+.sidenav a:hover {
+  color: #f1f1f1;
+}
+
+/* Position and style the close button (top right corner) */
+.sidenav .closebtn {
+  position: absolute;
+  top: 0;
+  right: 25px;
+  font-size: 36px;
+  margin-left: 50px;
+}
+
+/* Style page content - use this if you want to push the page content to the right when you open the side navigation */
+#main {
+  transition: margin-left .5s;
+  padding: 20px;
+}
+
+/* On smaller screens, where height is less than 450px, change the style of the sidenav (less padding and a smaller font size) */
+@media screen and (max-height: 450px) {
+  .sidenav {padding-top: 15px;}
+  .sidenav a {font-size: 18px;}
+}   
+
+    </style>
+    
+   
+    
+     <center>
+    
+    <script src="https://www.gstatic.com/firebasejs/5.7.3/firebase.js"></script>
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    
+    
+    <div id="myNav" class="overlay">
+
+  <!-- Button to close the overlay navigation -->
+  <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+
+
+
+</div>
+    
+    <script>
+    /* Open when someone clicks on the span element */
+
+        function openNav() {
+  document.getElementById("mySidenav").style.width = "250px";
+  document.getElementById("main").style.marginLeft = "250px";
+}
+
+/* Set the width of the side navigation to 0 and the left margin of the page content to 0 */
+function closeNav() {
+  document.getElementById("mySidenav").style.width = "0";
+  document.getElementById("main").style.marginLeft = "0";
+}
+    </script>
+    <script>
+       
+        //var facebookUrl = "";
+        
+        // Initialize Firebase
+        var config = {
+    apiKey: "AIzaSyD2Nk6o_lyA7h4krRla2RbLuCJ_E1Fb7Rs",
+    authDomain: "test-15bd3.firebaseapp.com",
+    databaseURL: "https://test-15bd3.firebaseio.com",
+    projectId: "test-15bd3",
+    storageBucket: "test-15bd3.appspot.com",
+    messagingSenderId: "622301877263"
+  };
+        firebase.initializeApp(config);
+                
+        // Check to see if you are logged in
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (user == null) {
+                alert("Not logged in.");
+                return;
+            } else {
+                userId = user.uid;
+                name = user.displayName;
+                imageUrl = user.photoURL;
+                email = user.email;
+                    
+                // write user data to users
+                writeUserData(userId, name, email, imageUrl);
+                
+                // write data to document
+                mydiv = document.getElementById("mydata");
+                mydiv.innerHTML = name
+                myphotodiv = document.getElementById("myphoto");
+                myphotodiv.innerHTML = "<img src='" + imageUrl + "'/>";
+                document.getElementById("mydata").innerHTML = name;
+                document.getElementById("myphoto").src = imageUrl;
+                
+                firebase.database().ref('/users').once('value').then(function(snapshot) {
+                    var data = (snapshot.val());
+                    dataarray = [data]
+                users = dataarray[0];
+                    
+                    for (var u in users) {
+                        if (users[u].email == email) {
+                            facebookname = users[u].facebook
+                            facebookUrl = "https://www.facebook.com/" + facebookname;
+                            //alert(facebookUrl);
+                        }
+                    }
+                });
+                
+                firebase.database().ref('/tweets').once('value').then(function(snapshot) {
+                    var data = (snapshot.val());
+                    if (data == null) {
+                      console.log("No data found at /tweets/" + userId);  
+                    } else {
+                        
+                      firebase.database().ref('/users').once('value').then(function(snapshot) { 
+                        var userdata = (snapshot.val());
+                        if (userdata != null) {
+                           dataarray = [data,userdata]
+                           console.log(dataarray)
+                           updatetweets(dataarray); 
+                        }
+                      });
+
+                    }
+                });
+            } 
+        }); 
+        
+        function encodeImageFileAsURL() {
+
+            var filesSelected = document.getElementById("inputFileToLoad").files;
+            if (filesSelected.length > 0) {
+                var fileToLoad = filesSelected[0];
+                var fileReader = new FileReader();
+                fileReader.onload = function(fileLoadedEvent) {
+                    var srcData = fileLoadedEvent.target.result; 
+           
+                    document.getElementById("imgTest").innerHTML = srcData;
+
+                    console.log(srcData);
+                }
+                fileReader.readAsDataURL(fileToLoad);
+            }
+        } 
+        function writeUserData(userId, name, email, imageUrl) {
+            firebase.database().ref('users/' + userId).update({
+                username: name,
+                email: email,
+                profile_picture : imageUrl
+            });
+        }
+        
+        function updatetweets(data) {
+            //var mylist = "<ul>";
+            var mytab = "<table>";
+            users = data[1]; 
+            data = data[0];
+            
+            for (var u in data) {
+                for (var t in data[u]) {
+                    mytab = mytab + "<tr>";
+                    var date = new Date(data[u][t].time);
+                    var time = date.toString();
+                    var likes = data[u][t].likes;
+                    var dislikes = data[u][t].likes;
+                    if (data[u][t].img != "") {
+                        mytab = mytab + "<td><img src='" + users[u].profile_picture + "' width='50px'></td>";
+                        mytab = mytab + "<td>" + users[u].email + "</td>";
+                        mytab = mytab + "<td>" + data[u][t].tweet + "</td>";
+                        mytab = mytab + "<td>" + time + "<br><img src='" + data[u][t].img + "' width='300px'></td>";
+                        mytab = mytab + "<td> <button onclick = 'like(" + data[u][t].time + ")'> Like </button> </td>";
+                        mytab = mytab + "<td> <button onclick = 'dislike(" + data[u][t].time + ")'> Disike </button> </td>";
+                    } else {
+                        mytab = mytab + "<td><img src='" + users[u].profile_picture + "' width='50px'></td>";
+                        mytab = mytab + "<td>" + users[u].email + "</td>";
+                        mytab = mytab + "<td>" + data[u][t].tweet + "</td>";
+                        mytab = mytab + "<td> | Likes: " + data[u][t].likes + " | Dislikes: " + data[u][t].dislikes + " | </td>";
+                        mytab = mytab + "<td>" + time + "</td>";
+                        mytab = mytab + "<td> <button onclick = 'like(" + data[u][t].time + ")'> Like </button> </td>";
+                        mytab = mytab + "<td> <button onclick = 'dislike(" + data[u][t].time + ")'> Disike </button> </td>";
+                        
+                        
+                    } 
+                    mytab = mytab + "</tr>";
+                }   
+            }
+            //mylist = mylist + "</ul>";
+            mytab = mytab + "</table>"
+            var mytdiv = document.getElementById("mytweets");
+            //mytdiv.innerHTML = mylist;
+            mytdiv.innerHTML = mytab;
+        }
+        
+        function like(data2) {
+            //var mylist = "<ul>";
+                        
+            firebase.database().ref('/tweets').once('value').then(function(snapshot) {
+                    var data = (snapshot.val());
+                    if (data == null) {
+                      console.log("No data found at /tweets/" + userId);  
+                    } else { 
+                        firebase.database().ref('/users').once('value').then(function(snapshot) { 
+                        var userdata = (snapshot.val());
+                        if (userdata != null) {
+                           dataarray = [data,userdata]
+                        }
+                      });
+                    }
+                users = dataarray[1]; 
+            data = dataarray[0];
+            
+                var uCount = 0;
+                var tCount = 0;
+                
+            for (var u in data) {
+                for (var t in data[u]) {
+                    if (data[u][t].time == data2) {
+                        newLikes = Number(data[u][t].likes) + 1;
+                        firebase.database().ref('tweets/' + data.u + "/" + data[u].t).update({
+                        likes: newLikes
+                        });
+                        alert(newLikes);
+                    }
+                    tCount++;
+                }
+            uCount++;
+            }
+            });
+        }
+ 
+                 function tweet() {
+            
+            var twitdoc = document.getElementById("twit");
+            var twitimg = document.getElementById("imgTest");
+            var nameValue = twitdoc.value;
+            var imgValue = twitimg.innerHTML;
+            var js_time = Date.now();
+            var tweetid = firebase.database().ref('tweets/' + userId + "/").push({tweet: nameValue, time: js_time, img: imgValue, likes: 0, dislikes: 0});
+            twitdoc.value = "";
+            console.log("tweet written")
+            
+            firebase.database().ref('/tweets').once('value').then(function(snapshot) {
+                    var data = (snapshot.val());
+                    if (data == null) {
+                      console.log("No data found at /tweets/" + userId);  
+                    } else { 
+                        firebase.database().ref('/users').once('value').then(function(snapshot) { 
+                        var userdata = (snapshot.val());
+                        if (userdata != null) {
+                           dataarray = [data,userdata]
+                           console.log(dataarray)
+                           updatetweets(dataarray); 
+                        }
+                      });
+                    }
+                });
+     
+            
+        }
+        
+        function signin() {
+            console.log("Signing in");
+            var provider = new firebase.auth.GoogleAuthProvider();
+            firebase.auth().signInWithRedirect(provider).then(function(result) { 
+                window.location.replace("fbtest.html");
+            });
+        }
+        
+        function signout() {
+            console.log("Signing out");
+            firebase.auth().signOut().then(function() {
+            });
+        }
+        
+
+    
+    </script>
+   
+
+    <body>
+        <button onclick="signin()">Sign in</button>
+        <button onclick="signout()">Sign out</button>
+        <br>
+       <br>
+    
+        <form>
+            Caption:<br>
+            <textarea id="twit" type="text" name="thetweet" cols="100" rows="4"></textarea>
+        </form> 
+        <button type="button" onclick="tweet()">Post</button>
+    
+        <br><input id="inputFileToLoad" type="file" onchange="encodeImageFileAsURL();" />
+        <div id="imgTest" style="display:none;"></div>
+        
+    <div id="mytweets"></div>
+    <div id="mydata"></div>
+    <div id="myphoto"></div>
+  
+    </body>
+
+    
+    </center>
+    
+     <script>      
+         var coll = document.getElementsByClassName("collapsible");
+var i;
+
+var modal = document.getElementById('myModal');
+
+var btn = document.getElementById("myBtn");
+
+var span = document.getElementsByClassName("close")[0];
+
+
+span.onclick = function() {
+  modal.style.display = "none";
+}
+
+window.onclick = function(event) {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
+}
+    
+ 
+
+console.log(imageUrl);
+console.log(userId);
+         
+    
+    </script>
+    
+</html>
